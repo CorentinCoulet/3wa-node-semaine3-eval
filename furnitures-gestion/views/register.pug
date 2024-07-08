@@ -1,0 +1,30 @@
+doctype html
+html(lang="fr")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Inscription - Gestion de Meubles
+    link(rel="stylesheet" href="/css/styles.css")
+  body
+    header
+      nav
+        ul
+          li: a(href="/") Accueil
+          li: a(href="/login") Connexion
+          li: a(href="/register") Inscription
+    main
+      h1 Inscription
+      form(action="/api/users/register" method="POST")
+        div
+          label(for="username") Nom d'utilisateur:
+          input(type="text" id="username" name="username" required)
+        div
+          label(for="email") Email:
+          input(type="email" id="email" name="email" required)
+        div
+          label(for="password") Mot de passe:
+          input(type="password" id="password" name="password" required)
+        div
+          button(type="submit") S'inscrire
+    footer
+      p © 2024 Gestion de Meubles. Tous droits réservés.

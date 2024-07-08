@@ -1,0 +1,21 @@
+doctype html
+html(lang="fr")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Tableau de Bord - Gestion de Meubles
+    link(rel="stylesheet" href="/css/styles.css")
+  body
+    header
+      nav
+        ul
+          li: a(href="/") Accueil
+          li: a(href="/login") Connexion
+          li: a(href="/register") Inscription
+          li: a(href="/dashboard") Tableau de Bord
+    main
+      h1 Tableau de Bord
+      p Bienvenue #{user.username}
+      p Email: #{user.email}
+    footer
+      p © 2024 Gestion de Meubles. Tous droits réservés.

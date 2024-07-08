@@ -1,0 +1,81 @@
+const Keyword = require('../models/Keyword');
+
+// Créer un nouveau mot-clef
+const createKeyword = async (req, res) => {
+  const { keyword } = req.body;
+
+  try {
+    const newKeyword = new Keyword({
+      keyword
+    });
+
+    const keywordObj = await newKeyword.save();
+    res.json(keywordObj);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Erreur du serveur');
+  }
+};
+
+// Obtenir tous les mots-clefs
+const getAllKeywords = async (req, res) => {
+  try {
+    const keywords = await Keyword.find();
+    res.json(keywords);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Erreur du serveur');
+  }
+};
+
+// Obtenir un mot-clef par son id
+const getKeywordById = async (req, res) => {
+  try {
+    const keyword = await Keyword.findById(req.params.id);
+    if (!keyword) return res.status(404).json({ msg: 'Mot-clef inconnu' });
+    res.json(keyword);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Erreur du serveur');
+  }
+};
+
+// Mettre à jour un mot-clef par son id
+const updateKeywordById = async (req, res) => {
+  const { keyword } = req.body;
+
+  try {
+    let keywordObj = await Keyword.findById(req.params.id);
+    if (!keywordObj) return res.status(404).json({ msg: 'Mot-clef inconnu' });
+
+    keywordObj.keyword = keyword;
+
+    await keywordObj.save();
+    res.json(keywordObj);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Erreur du serveur');
+  }
+};
+
+// Supprimer un mot-clef par son id
+const deleteKeywordById = async (req, res) => {
+  try {
+    let keyword = await Keyword.findById(req.params.id);
+    if (!keyword) return res.status(404).json({ msg: 'Mot-clef inconnu' });
+
+    await keyword.remove();
+    res.json({ msg: 'Mot-clef supprimé avec succès' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Erreur du serveur');
+  }
+};
+
+module.exports = {
+  createKeyword,
+  getAllKeywords,
+  getKeywordById,
+  updateKeywordById,
+  deleteKeywordById
+};
