@@ -17,6 +17,10 @@ connectDB();
 
 const app = express();
 
+const bodyParser = require('body-parser');
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }));
+
 // Middleware
 app.use(express.json());
 
