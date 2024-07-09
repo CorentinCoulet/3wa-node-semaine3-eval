@@ -1,23 +1,18 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 
-module.exports = async function(req, res, next) {
-  // Récupérer le token du header HTTP
-  const token = req.header('x-auth-token');
-
-  // Vérifier s'il y a un token
+module.exports = function (req, res, next) {
+  const token = req.cookies.token;
+  
   if (!token) {
-    return res.status(401).json({ msg: 'Pas de token, autorisation refusée' });
+    return res.status(401).json({ msg: 'Pas de token, accès refusé' });
   }
 
   try {
-    // Vérifier le token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Ajouter l'utilisateur décodé à la requête
-    req.user = await User.findById(decoded.user.id).select('-password');
+    req.user = decoded.user;
+    console.log('Token valide, utilisateur décodé:', req.user);
     next();
   } catch (err) {
-    res.status(401).json({ msg: 'Token non valide' });
+    res.status(401).json({ msg: 'Token invalide' });
   }
 };

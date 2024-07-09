@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 
 const userRoutes = require('./routes/users');
@@ -10,6 +11,9 @@ const categoryRoutes = require('./routes/categories');
 const furnitureRoutes = require('./routes/furnitures');
 const keywordRoutes = require('./routes/keywords');
 const statisticRoutes = require('./routes/statistics');
+
+const User = require('./models/User');
+const auth = require('./middleware/auth');
 
 dotenv.config();
 
@@ -23,6 +27,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -52,10 +57,17 @@ app.get('/register', (req, res) => {
   res.render('register');
 });
 
-// Route pour le tableau de bord (exemple avec utilisateur statique)
-app.get('/dashboard', (req, res) => {
-  const user = req.user;
-  res.render('dashboard', { user });
+// Route pour le tableau de bord
+app.get('/dashboard', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ msg: 'Utilisateur non trouvé' });
+    }
+    res.render('dashboard', { user });
+  } catch (err) {
+    res.status(500).send('Erreur du serveur');
+  }
 });
 
 const PORT = process.env.PORT || 5000;

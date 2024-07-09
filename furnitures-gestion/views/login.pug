@@ -14,7 +14,7 @@ html(lang="fr")
           li: a(href="/register") Inscription
     main
       h1 Connexion
-      form(action="/api/users/login" method="POST")
+      form(id="loginForm")
         div
           label(for="username") Nom d'utilisateur:
           input(type="text" id="username" name="username" required)
@@ -25,3 +25,5 @@ html(lang="fr")
           button(type="submit") Se connecter
     footer
       p © 2024 Gestion de Meubles. Tous droits réservés.
+    
+    script(src="/js/login.js")

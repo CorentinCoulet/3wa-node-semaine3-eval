@@ -31,9 +31,14 @@ router.post('/register', async (req, res) => {
       }
     };
 
-    jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 3600 }, (err, token) => {
+    jwt.sign(
+      payload, 
+      process.env.JWT_SECRET, 
+      { expiresIn: 3600 }, 
+      (err, token) => {
       if (err) throw err;
-      res.json({ token });
+      res.cookie('token', token, { httpOnly: true });
+      res.json({ redirectTo: '/login' });
     });
   } catch (err) {
     console.error(err.message);
@@ -61,13 +66,12 @@ router.post('/login', async (req, res) => {
         id: user.id
       }
     };
-
     jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 3600 }, (err, token) => {
       if (err) throw err;
-      res.json({ token });
+      res.cookie('token', token, { httpOnly: true });
+      res.json({ redirectTo: '/login' });
     });
   } catch (err) {
-    console.error('Erreur lors de la connexion :', err.message);
     res.status(500).send('Erreur du serveur');
   }
 });
