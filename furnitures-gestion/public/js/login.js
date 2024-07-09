@@ -4,6 +4,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
   
+    window.location.href = "/dashboard";
+
     try {
       const response = await fetch('/api/users/login', {
         method: 'POST',
@@ -15,7 +17,6 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   
       if (response.ok) {
         const data = await response.json();
-        window.location.href = data.redirectTo;
       } else {
         const errorData = await response.json();
         alert(errorData.msg);

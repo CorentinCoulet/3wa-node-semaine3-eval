@@ -38,7 +38,7 @@ router.post('/register', async (req, res) => {
       (err, token) => {
       if (err) throw err;
       res.cookie('token', token, { httpOnly: true });
-      res.json({ redirectTo: '/login' });
+      res.redirect('/dashboard');
     });
   } catch (err) {
     console.error(err.message);
@@ -69,7 +69,7 @@ router.post('/login', async (req, res) => {
     jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 3600 }, (err, token) => {
       if (err) throw err;
       res.cookie('token', token, { httpOnly: true });
-      res.json({ redirectTo: '/login' });
+      res.redirect('/dashboard');
     });
   } catch (err) {
     res.status(500).send('Erreur du serveur');
