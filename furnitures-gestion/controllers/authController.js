@@ -67,4 +67,16 @@ exports.authenticateUser = async (req, res) => {
     console.error('Erreur lors de l\'authentification:', err.message);
     res.status(500).send('Erreur du serveur');
   }
+
+};
+
+exports.logout = (req, res) => {
+  res.clearCookie('token'); 
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Erreur lors de la déconnexion :', err);
+      return res.status(500).send('Erreur de déconnexion');
+    }
+    res.redirect('/'); 
+  });
 };

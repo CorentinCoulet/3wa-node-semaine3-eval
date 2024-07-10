@@ -1,23 +1,144 @@
 doctype html
-html(lang="fr")
+html
   head
-    meta(charset="UTF-8")
-    meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    title Tableau de Bord - Gestion de Meubles
-    link(rel="stylesheet" href="/css/styles.css")
+    title Tableau de bord
+    link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css')
+    script(src='https://cdn.jsdelivr.net/npm/chart.js')
+
   body
-    header
-      nav
-        ul
-          li: a(href="/") Accueil
-          li: a(href="/login") Connexion
-          li: a(href="/register") Inscription
-    main
-      h1 Tableau de Bord
-      if user
-        p Bienvenue #{user.username}
-        p Email: #{user.email}
-      else
-        p Utilisateur non trouvé
-    footer
-      p © 2024 Gestion de Meubles. Tous droits réservés.
+    .container
+      .row.justify-content-center.mt-5
+        .col-md-8
+          .card
+            .card-header
+              h1.text-center Tableau de bord de #{user.username}
+            .card-body
+              if success_msg
+                .alert.alert-success.alert-dismissible.fade.show(role='alert')
+                  | #{success_msg}
+                  button.btn-close(type='button', data-bs-dismiss='alert', aria-label='Fermer')
+              if error_msg
+                .alert.alert-danger.alert-dismissible.fade.show(role='alert')
+                  | #{error_msg}
+                  button.btn-close(type='button', data-bs-dismiss='alert', aria-label='Fermer')
+
+              .mb-4
+                h2 Actions
+                .d-grid.gap-2
+                  button.btn.btn-primary(type='button', onclick='toggleContent("addFurnitureForm")') Ajouter un meuble
+                  button.btn.btn-secondary(type='button', onclick='toggleContent("statsChartSection")') Voir les statistiques
+
+              #addFurnitureForm(style='display: none;')
+                form(method='POST', action='/api/furnitures')
+                  .mb-3
+                    label(for='name') Nom du meuble
+                    input#name.form-control(name='name', type='text', required)
+                  .mb-3
+                    label(for='category') Catégorie
+                    select#category.form-select(name='category', required)
+                      option(value='5fd9d312830fa128ec983e5a') Armoire
+                      option(value='5fd9d312830fa128ec983e5b') Étagère
+                  .mb-3
+                    label(for='quantity') Quantité
+                    input#quantity.form-control(name='quantity', type='number', required)
+                  .mb-3
+                    label(for='materials') Matériaux
+                    select#materials.form-select(name='materials', multiple='', required)
+                      option(value='5fd9d312830fa128ec983e5c') Bois - Frêne
+                      option(value='5fd9d312830fa128ec983e5d') Bois - Chêne
+                      option(value='5fd9d312830fa128ec983e5e') Bois - Noyer
+                      option(value='5fd9d312830fa128ec983e5f') Fer - Acier inox
+                      option(value='5fd9d312830fa128ec983e60') Fer - Aluminium
+                      option(value='5fd9d312830fa128ec983e61') Plastique
+                  .mb-3
+                    label(for='keywords') Mots-clés (séparés par des virgules)
+                    input#keywords.form-control(name='keywords', type='text', required)
+                  button.btn.btn-primary(type='submit') Ajouter
+
+              #statsChartSection(style='display: none;')
+                h2 Statistiques
+                canvas#statsChart(width='400', height='400')
+
+              // Bouton de déconnexion
+              form(action='/api/users/logout', method='GET')
+                button.btn.btn-danger(type='submit') Se déconnecter
+
+    script.
+      function toggleContent(sectionId) {
+        const sections = ['addFurnitureForm', 'statsChartSection'];
+        sections.forEach(section => {
+          const element = document.getElementById(section);
+          if (section === sectionId) {
+            element.style.display = 'block';
+          } else {
+            element.style.display = 'none';
+          }
+        });
+
+        if (sectionId === 'statsChartSection') {
+          fetchStatistics();
+        }
+      }
+
+      async function fetchStatistics() {
+        try {
+          const response = await fetch('/api/statistics');
+          const data = await response.json();
+          updateChart(data);
+          console.log(data);
+        } catch (error) {
+          console.error('Erreur lors de la récupération des statistiques :', error.message);
+        }
+      }
+
+      let myChart; 
+
+      function updateChart(statistics) {
+        const ctx = document.getElementById('statsChart').getContext('2d');
+        if (myChart) {
+          myChart.destroy();
+        }
+
+        const labels = statistics.map(stat => stat.furniture.name);
+        const data = statistics.map(stat => stat.furniture.quantity);
+
+        myChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Quantité de Meubles',
+              data: data,
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', (event) => {
+        const alertElements = document.querySelectorAll('.alert');
+        alertElements.forEach(alert => {
+          const button = alert.querySelector('button');
+          if (button) {
+            button.addEventListener('click', () => {
+              alert.style.display = 'none';
+            });
+          }
+        });
+
+        setTimeout(() => {
+          const alertElements = document.querySelectorAll('.alert');
+          alertElements.forEach(alert => {
+            alert.style.display = 'none';
+          });
+        }, 5000);
+      });

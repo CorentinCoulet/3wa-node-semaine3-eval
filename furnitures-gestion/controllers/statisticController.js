@@ -52,7 +52,7 @@ const deleteStatisticById = async (req, res) => {
     res.json({ msg: 'Statistique supprimée avec succès' });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Erreur du serveur');
+    res.status(code).send('Erreur du serveur');
   }
 };
 

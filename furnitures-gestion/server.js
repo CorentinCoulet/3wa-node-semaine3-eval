@@ -14,6 +14,9 @@ const statisticRoutes = require('./routes/statistics');
 
 const User = require('./models/User');
 const auth = require('./middleware/auth');
+const session = require('express-session');
+const flash = require('connect-flash');
+const dashboardController = require('./controllers/dashboardController'); 
 
 dotenv.config();
 
@@ -28,6 +31,20 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
+
+app.use(session({
+  secret: process.env.JWT_SECRET,
+  resave: false,
+  saveUninitialized: true,
+}));
+
+app.use(flash());
+
+app.use((req, res, next) => {
+  res.locals.success_msg = req.flash('success_msg');
+  res.locals.error_msg = req.flash('error_msg');
+  next();
+});
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -57,18 +74,18 @@ app.get('/register', (req, res) => {
   res.render('register');
 });
 
-// Route pour le tableau de bord
-app.get('/dashboard', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ msg: 'Utilisateur non trouvé' });
+// Route pour la déconnexion
+app.get('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      console.log(err);
     }
-    res.render('dashboard', { user });
-  } catch (err) {
-    res.status(500).send('Erreur du serveur');
-  }
+    res.redirect('/'); 
+  });
 });
+
+// Route pour le tableau de bord
+app.get('/dashboard', auth, dashboardController.getDashboard);
 
 const PORT = process.env.PORT || 5000;
 

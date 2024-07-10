@@ -3,10 +3,10 @@ const Schema = mongoose.Schema;
 
 const FurnitureSchema = new Schema({
   name: { type: String, required: true },
-  category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   quantity: { type: Number, required: true },
-  materials: [{ type: Schema.Types.ObjectId, ref: 'Material' }],
-  keywords: [{ type: Schema.Types.ObjectId, ref: 'Keyword' }]
+  materials: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Material', required: true }],
+  keywords: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Keyword', required: true }],
 });
 
 module.exports = mongoose.model('Furniture', FurnitureSchema);
