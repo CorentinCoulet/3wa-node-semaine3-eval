@@ -53,6 +53,33 @@ exports.createFurniture = async (req, res) => {
   }
 };
 
+// Visualiser les meubles avec des mot-clefs
+exports.getAllFurnituresWithFilter = async (req, res) => {
+  try {
+    let filter = {};
+    const { keyword } = req.query;
+
+    if (keyword) {
+      // Trouver le mot-clé dans la collection Keyword
+      const keywordObj = await Keyword.findOne({ keyword });
+
+      if (keywordObj) {
+        filter = { keywords: keywordObj._id };
+      } else {
+        // Si le mot-clé n'est pas trouvé, retourner une liste vide
+        return res.json([]);
+      }
+    }
+
+    // Récupérer toutes les fournitures avec ou sans filtrage par mot-clé
+    const furnitures = await Furniture.find(filter).populate('keywords');
+    res.json(furnitures);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Erreur du serveur');
+  }
+};
+
 // Visualiser un meuble 
 exports.getFurnitureById = async (req, res) => {
   try {

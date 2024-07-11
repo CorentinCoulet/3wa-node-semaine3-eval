@@ -7,11 +7,14 @@ html(lang='fr')
     link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css')
     script(src='https://cdn.jsdelivr.net/npm/chart.js')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js')
-    script(src='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js') // Ajout du script Bootstrap bundle
+    script(src='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js')
 
     style.
       .no-select {
         user-select: none;
+      }
+      .logout-button {
+        margin-top: 1rem; /* Ajout de la marge top */
       }
 
   body
@@ -37,6 +40,7 @@ html(lang='fr')
                   button.btn.btn-primary(type='button', onclick='toggleContent("addFurnitureForm")') Ajouter un meuble
                   button.btn.btn-secondary(type='button', onclick='toggleContent("statsChartSection")') Voir les statistiques
                   button.btn.btn-info(type='button', onclick='toggleContent("materialsListSection")') Voir les matériaux
+                  button.btn.btn-warning(type='button', onclick='toggleContent("furnitureListSection")') Voir les fournitures
 
               #addFurnitureForm(style='display: none;')
                 form(method='POST', action='/api/furnitures')
@@ -73,13 +77,18 @@ html(lang='fr')
                 h2 Liste des matériaux
                 .list-group#materialsList.no-select
 
-              // Bouton de déconnexion
+              #furnitureListSection(style='display: none;')
+                h2 Liste des fournitures
+                input#furnitureKeywordSearch.form-control.mb-3(type='text', placeholder='Rechercher par mot-clé', oninput='filterFurnitures()')
+                .list-group#furnitureList.no-select
+
+              // Bouton de déconnexion avec marge top ajoutée
               form(action='/api/users/logout', method='GET')
-                button.btn.btn-danger(type='submit') Se déconnecter
+                button.btn.btn-danger.logout-button(type='submit') Se déconnecter
 
     script.
       function toggleContent(sectionId) {
-        const sections = ['addFurnitureForm', 'statsChartSection', 'materialsListSection'];
+        const sections = ['addFurnitureForm', 'statsChartSection', 'materialsListSection', 'furnitureListSection'];
         sections.forEach(section => {
           const element = document.getElementById(section);
           if (section === sectionId) {
@@ -93,6 +102,8 @@ html(lang='fr')
           fetchStatistics();
         } else if (sectionId === 'materialsListSection') {
           fetchMaterials();
+        } else if (sectionId === 'furnitureListSection') {
+          fetchFurnitures();
         }
       }
 
@@ -101,7 +112,6 @@ html(lang='fr')
           const response = await fetch('/api/statistics');
           const data = await response.json();
           updateChart(data);
-          console.log(data);
         } catch (error) {
           console.error('Erreur lors de la récupération des statistiques :', error.message);
         }
@@ -209,21 +219,86 @@ html(lang='fr')
         });
       }
 
-      document.addEventListener('DOMContentLoaded', (event) => {
-        const alertElements = document.querySelectorAll('.alert');
-        alertElements.forEach(alert => {
-          const button = alert.querySelector('button');
-          if (button) {
-            button.addEventListener('click', () => {
-              alert.style.display = 'none';
-            });
+      async function fetchFurnitures() {
+        try {
+          const response = await fetch('/api/furnitures');
+          const furnitures = await response.json();
+          updateFurnitureList(furnitures);
+        } catch (error) {
+          console.error('Erreur lors de la récupération des fournitures :', error.message);
+        }
+      }
+
+      function updateFurnitureList(furnitures) {
+        const furnitureList = document.getElementById('furnitureList');
+        furnitureList.innerHTML = '';
+        furnitures.forEach(furniture => {
+          const li = document.createElement('li');
+          li.className = 'list-group-item list-group-item-action';
+          li.textContent = `${furniture.name} - Quantité: ${furniture.quantity}`;
+          li.dataset.id = furniture._id;
+          li.dataset.name = furniture.name;
+          li.dataset.category = furniture.category;
+          li.dataset.materials = furniture.materials.join(', ');
+          li.dataset.keywords = furniture.keywords.join(', ');
+          li.addEventListener('click', function() {
+            openFurnitureDetails(this);
+          });
+          furnitureList.appendChild(li);
+        });
+      }
+
+      function openFurnitureDetails(element) {
+        const name = element.dataset.name;
+        const category = element.dataset.category;
+        const materials = element.dataset.materials;
+        const keywords = element.dataset.keywords;
+
+        const content = `
+          <div class="modal fade" id="furnitureDetailsModal" tabindex="-1" aria-labelledby="furnitureDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="furnitureDetailsModalLabel">Détails du Meuble</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                  <p><strong>Nom:</strong> ${name}</p>
+                  <p><strong>Catégorie:</strong> ${category}</p>
+                  <p><strong>Matériaux:</strong> ${materials}</p>
+                  <p><strong>Mots-clés:</strong> ${keywords}</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', content);
+        const modalElement = document.getElementById('furnitureDetailsModal');
+        const modal = new bootstrap.Modal(modalElement, {
+          backdrop: 'static', 
+        });
+        modal.show();
+        
+        modalElement.addEventListener('hidden.bs.modal', function () {
+          modalElement.remove();
+        });
+      }
+
+      function filterFurnitures() {
+        const keyword = document.getElementById('furnitureKeywordSearch').value.toLowerCase();
+        const furnitureItems = document.getElementById('furnitureList').getElementsByTagName('li');
+
+        Array.from(furnitureItems).forEach(item => {
+          const textContent = item.textContent.toLowerCase();
+          if (textContent.includes(keyword)) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
           }
         });
-
-        setTimeout(() => {
-          const alertElements = document.querySelectorAll('.alert');
-          alertElements.forEach(alert => {
-            alert.style.display = 'none';
-          });
-        }, 5000);
-      });
+      }
+  </script>
