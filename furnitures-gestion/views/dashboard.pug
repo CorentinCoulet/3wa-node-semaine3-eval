@@ -1,9 +1,18 @@
 doctype html
-html
+html(lang='fr')
   head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
     title Tableau de bord
     link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css')
     script(src='https://cdn.jsdelivr.net/npm/chart.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js')
+    script(src='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js') // Ajout du script Bootstrap bundle
+
+    style.
+      .no-select {
+        user-select: none;
+      }
 
   body
     .container
@@ -27,6 +36,7 @@ html
                 .d-grid.gap-2
                   button.btn.btn-primary(type='button', onclick='toggleContent("addFurnitureForm")') Ajouter un meuble
                   button.btn.btn-secondary(type='button', onclick='toggleContent("statsChartSection")') Voir les statistiques
+                  button.btn.btn-info(type='button', onclick='toggleContent("materialsListSection")') Voir les matériaux
 
               #addFurnitureForm(style='display: none;')
                 form(method='POST', action='/api/furnitures')
@@ -59,13 +69,17 @@ html
                 h2 Statistiques
                 canvas#statsChart(width='400', height='400')
 
+              #materialsListSection(style='display: none;')
+                h2 Liste des matériaux
+                .list-group#materialsList.no-select
+
               // Bouton de déconnexion
               form(action='/api/users/logout', method='GET')
                 button.btn.btn-danger(type='submit') Se déconnecter
 
     script.
       function toggleContent(sectionId) {
-        const sections = ['addFurnitureForm', 'statsChartSection'];
+        const sections = ['addFurnitureForm', 'statsChartSection', 'materialsListSection'];
         sections.forEach(section => {
           const element = document.getElementById(section);
           if (section === sectionId) {
@@ -77,6 +91,8 @@ html
 
         if (sectionId === 'statsChartSection') {
           fetchStatistics();
+        } else if (sectionId === 'materialsListSection') {
+          fetchMaterials();
         }
       }
 
@@ -91,7 +107,7 @@ html
         }
       }
 
-      let myChart; 
+      let myChart;
 
       function updateChart(statistics) {
         const ctx = document.getElementById('statsChart').getContext('2d');
@@ -121,6 +137,75 @@ html
               }
             }
           }
+        });
+      }
+
+      async function fetchMaterials() {
+        try {
+          const response = await fetch('/api/materials');
+          const materials = await response.json();
+          updateMaterialsList(materials);
+        } catch (error) {
+          console.error('Erreur lors de la récupération des matériaux :', error.message);
+        }
+      }
+
+      function updateMaterialsList(materials) {
+        const materialsList = document.getElementById('materialsList');
+        materialsList.innerHTML = '';
+        materials.forEach(material => {
+          const li = document.createElement('li');
+          li.className = 'list-group-item list-group-item-action';
+          li.textContent = `${material.name} (${material.type} - ${material.supplier})`;
+          li.dataset.id = material._id;
+          li.dataset.name = material.name;
+          li.dataset.type = material.type;
+          li.dataset.supplier = material.supplier;
+          li.dataset.description = material.description;
+          li.addEventListener('click', function() {
+            openMaterialDetails(this);
+          });
+          materialsList.appendChild(li);
+        });
+      }
+
+      function openMaterialDetails(element) {
+        const name = element.dataset.name;
+        const type = element.dataset.type;
+        const supplier = element.dataset.supplier;
+        const description = element.dataset.description;
+
+        const content = `
+          <div class="modal fade" id="materialDetailsModal" tabindex="-1" aria-labelledby="materialDetailsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="materialDetailsModalLabel">Détails du Matériau</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                  <p><strong>Nom:</strong> ${name}</p>
+                  <p><strong>Type:</strong> ${type}</p>
+                  <p><strong>Fournisseur:</strong> ${supplier}</p>
+                  <p><strong>Description:</strong> ${description}</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', content);
+        const modalElement = document.getElementById('materialDetailsModal');
+        const modal = new bootstrap.Modal(modalElement, {
+          backdrop: 'static', 
+        });
+        modal.show();
+        
+        modalElement.addEventListener('hidden.bs.modal', function () {
+          modalElement.remove();
         });
       }
 

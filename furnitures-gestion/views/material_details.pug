@@ -1,0 +1,23 @@
+doctype html
+html(lang='fr')
+  head
+    meta(charset='UTF-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title Détails du Matériau
+    link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css')
+
+  body
+    .container
+      .row.justify-content-center.mt-5
+        .col-md-8
+          .card
+            .card-header
+              h1.text-center Détails du Matériau
+            .card-body
+              h2 Description
+              p Nom: #{material.name}
+              p Type: #{material.type}
+              p Fournisseur: #{material.supplier}
+              p Description: #{material.description}
+
+              a.btn.btn-primary(href='/dashboard') Retour au Tableau de bord
